@@ -15,6 +15,7 @@ from colorama import Fore
 
 
 
+
 def create_gif(fps=24):
     """
     将多张图片合成一个GIF动图。
@@ -61,7 +62,7 @@ def gengrate_video():
     folder_path = f'imagedata'
 
     # 指定输出视频的路径和文件名
-    video_path = 'output_video_5agv.mp4'
+    video_path = 'output_video_10agv.mp4'
 
     # 获取文件夹中所有图片文件的路径
     image_files = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(('.png', '.jpg', '.jpeg'))]
@@ -388,8 +389,8 @@ class simulate:
 
             self.update_agvs()
 
-            # if (self.time//self.step)%4==0:
-            #     self.plot()
+            #if (self.time//self.step)%2==0:
+            self.plot()
            # print(f"simulate time: {self.time}")
 
             tempbool=True
@@ -400,7 +401,7 @@ class simulate:
             self.is_finished=tempbool
 
         print(f"Simulate Finished! Time:{self.time}\n")
-       # gengrate_video()
+        gengrate_video()
 
 
 
@@ -411,34 +412,34 @@ class simulate:
 
 
 if __name__=="__main__":
-    SM=simulate(dictionary_map)
-    tasks={}
-
-    task1=Task(1,1,1,20,15,1,1)
-    task2=Task(1,1,1,39,13,1,1)
-    task3=Task(1,1,1,38,14,1,1)
-    task4=Task(1,1,1,35,17,1,1)
-    task5=Task(1,1,1,37,16,1,1)
-    task6=Task(1,1,1,30,11,1,1)
-    task7=Task(1,1,1,27,12,1,1)
-    task8=Task(1,1,1,26,10,1,1)
-    task9=Task(1,1,1,25,9,1,1)
-    task10=Task(1,1,1,19,8,1,1)
-
-    tasks[1]=task1
-    tasks[2]=task2
-    tasks[3]=task3
-    tasks[4]=task4
-    tasks[5]=task5
-    tasks[6]=task6
-    tasks[7]=task7
-    tasks[8]=task8
-    tasks[9]=task9
-    tasks[10]=task10
-
-    SM.creatAGVS(10,tasks)
-    SM.run()
-    #gengrate_video()
+    # SM=simulate(dictionary_map)
+    # tasks={}
+    #
+    # task1=Task(1,1,1,115,9,1,1)
+    # task2=Task(1,1,1,39,10,1,1)
+    # task3=Task(1,1,1,38,11,1,1)
+    # task4=Task(1,1,1,35,12,1,1)
+    # task5=Task(1,1,1,47,13,1,1)
+    # task6=Task(1,1,1,30,16,1,1)
+    # task7=Task(1,1,1,41,15,1,1)
+    # task8=Task(1,1,1,116,177,1,1)
+    # task9=Task(1,1,1,65,179,1,1)
+    # task10=Task(1,1,1,27,181,1,1)
+    #
+    # tasks[1]=task1
+    # tasks[2]=task2
+    # tasks[3]=task3
+    # tasks[4]=task4
+    # tasks[5]=task5
+    # tasks[6]=task6
+    # tasks[7]=task7
+    # tasks[8]=task8
+    # tasks[9]=task9
+    # tasks[10]=task10
+    #
+    # SM.creatAGVS(10,tasks)
+    # SM.run()
+    gengrate_video()
    # create_gif()
     #print(sigmoid_probability(15,1,15))
 

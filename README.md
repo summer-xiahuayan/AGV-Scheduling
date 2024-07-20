@@ -29,3 +29,5 @@ You can choose between Manhattan distance or Euclidean distance.
 **16-adjacency path planning**
 
 ![image-20240913171501335](https://gitee.com/xiahuayan/public-image-lab/raw/master/img/202409131715537.png)
+
+#### 3.Simulate
