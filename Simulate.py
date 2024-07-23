@@ -412,34 +412,34 @@ class simulate:
 
 
 if __name__=="__main__":
-    # SM=simulate(dictionary_map)
-    # tasks={}
-    #
-    # task1=Task(1,1,1,115,9,1,1)
-    # task2=Task(1,1,1,39,10,1,1)
-    # task3=Task(1,1,1,38,11,1,1)
-    # task4=Task(1,1,1,35,12,1,1)
-    # task5=Task(1,1,1,47,13,1,1)
-    # task6=Task(1,1,1,30,16,1,1)
-    # task7=Task(1,1,1,41,15,1,1)
-    # task8=Task(1,1,1,116,177,1,1)
-    # task9=Task(1,1,1,65,179,1,1)
-    # task10=Task(1,1,1,27,181,1,1)
-    #
-    # tasks[1]=task1
-    # tasks[2]=task2
-    # tasks[3]=task3
-    # tasks[4]=task4
-    # tasks[5]=task5
-    # tasks[6]=task6
-    # tasks[7]=task7
-    # tasks[8]=task8
-    # tasks[9]=task9
-    # tasks[10]=task10
-    #
-    # SM.creatAGVS(10,tasks)
-    # SM.run()
-    gengrate_video()
+    SM=simulate(dictionary_map)
+    tasks={}
+
+    task1=Task(1,1,1,115,9,1,1)
+    task2=Task(1,1,1,39,10,1,1)
+    task3=Task(1,1,1,38,11,1,1)
+    task4=Task(1,1,1,35,12,1,1)
+    task5=Task(1,1,1,47,13,1,1)
+    task6=Task(1,1,1,30,16,1,1)
+    task7=Task(1,1,1,41,15,1,1)
+    task8=Task(1,1,1,116,177,1,1)
+    task9=Task(1,1,1,65,179,1,1)
+    task10=Task(1,1,1,27,181,1,1)
+
+    tasks[1]=task1
+    tasks[2]=task2
+    tasks[3]=task3
+    tasks[4]=task4
+    tasks[5]=task5
+    tasks[6]=task6
+    tasks[7]=task7
+    tasks[8]=task8
+    tasks[9]=task9
+    tasks[10]=task10
+
+    SM.creatAGVS(10,tasks)
+    SM.run()
+   # gengrate_video()
    # create_gif()
     #print(sigmoid_probability(15,1,15))
 
