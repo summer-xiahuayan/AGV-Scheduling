@@ -12,6 +12,7 @@ import matplotlib.image as mpimg
 import os
 
 from AGV import AGV
+from logger import logger
 
 # 统一读入配置文件
 # df_Grid = pd.read_csv(f"FactoryMap.csv")
@@ -138,7 +139,7 @@ class A_star:
                     self.found_end_node = child
 
         if self.found_end_node is None:
-            logging.warning(f'无法找到从{self.start_point.id}到{self.end_point.id}的路')
+            logger.warning(f'无法找到从{self.start_point.id}到{self.end_point.id}的路')
             return None
         else:
             route = self.get_route()

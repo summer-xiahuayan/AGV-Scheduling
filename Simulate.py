@@ -11,7 +11,7 @@ import os
 import math
 from tqdm import tqdm
 from colorama import Fore
-
+from logger import logger
 
 
 
@@ -87,8 +87,8 @@ def gengrate_video():
             image = imageio.imread(image_file)
             video.append_data(image)
             #print(image_file)
+    logger.info("Video have finished")
 
-    print("Video have finished")
 
 
 
@@ -168,20 +168,43 @@ class simulate:
         self.global_planning_time=0
 
 
+    def online_task(self):
+        #print("self.time",self.time)
+        if int(self.time*10)==100:
+            task_online=Task(110,1,1,2,17,1,1)
+            distence=9999
+            best_agv=None
+            for Key,agv in self.agvs.items():
+                if agv.status=="idle":
+                    agv_distence=math.sqrt((agv.x-self.map[task_online.start].x)**2+(agv.y-self.map[task_online.start].y)**2)
+                    if agv_distence<distence:
+                        distence=agv_distence
+                        best_agv=agv
+            # assert isinstance(best_agv,AGV),"obj is not an instance of AGV"
+
+            load=0
+            if best_agv==None:
+                for Key,agv in self.agvs.items():
+                    agv_load=len(agv.tasklist)
+                    if agv_load>=load:
+                        load=agv_load
+                        best_agv=agv
+
+            if best_agv!=None and task_online!=None:
+                best_agv.add_task_to_tasklist(task_online)
+                logger.info(f"AGV:{best_agv.ID}add online task:{task_online.num}")
+
+
+
 
     def creatAGVS(self,num,task):
         for i in range(1,num+1):
-            agv=AGV(i,task[i].start,i,[])
-            agv.route=get_path(self.map,agv.park_loc,task[i].start)+get_path(self.map,task[i].start,task[i].end)[1:]
+            agv=AGV(i,i,self.map)
+            agv.add_task_to_tasklist(task[i])
+            agv.set_task_from_tasklist()
+            agv.set_route_from_task(self.map)
             agv.status="busy"
-            agv.task=task[i]
-            print(agv.route)
-            agv.location=agv.route[0]
-            agv.next_loc=agv.route[1]
-            #self.map[agv.location].reservation=True
-            #self.map[agv.next_loc].reservation=True
-            agv.x=self.map[agv.park_loc].x
-            agv.y=self.map[agv.park_loc].y
+            logger.info(f"AGV:{agv.ID},ROUTE:{agv.route}")
             temp=copy.deepcopy(agv)
             self.agvs[i]=temp
 
@@ -219,7 +242,8 @@ class simulate:
                     agv.next_loc=agv.route[agv.routeid+1]
                     self.map[agv.next_loc].reservation=True
                     self.map[agv.next_loc].reserve_agv=agv.ID
-                    print(Fore.GREEN+f"AGV:{agv.ID} have re-plan route {agv.route} \n"+Fore.BLACK)
+                    logger.warning(f"AGV:{agv.ID} have re-plan route {agv.route} \n")
+                    # print(Fore.GREEN+f"AGV:{agv.ID} have re-plan route {agv.route} \n"+Fore.BLACK)
                     agv.waiting_time_work=0
                 else:
                     agv.waiting_time_work=0
@@ -229,10 +253,12 @@ class simulate:
                 agv.next_loc=agv.route[agv.routeid+1]
                 self.map[agv.next_loc].reservation=True
                 self.map[agv.next_loc].reserve_agv=agv.ID
-                print(Fore.GREEN+f"AGV:{agv.ID} have re-plan route {agv.route} \n"+Fore.BLACK)
+                logger.warning(f"AGV:{agv.ID} have re-plan route {agv.route} \n")
+                # print(Fore.GREEN+f"AGV:{agv.ID} have re-plan route {agv.route} \n"+Fore.BLACK)
                 agv.waiting_time_work=0
         else:
-            print(Fore.RED+f"AGV:{agv.ID} because of end reserved have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
+            logger.warning(f"AGV:{agv.ID} because of end reserved have wait {agv.waiting_time_work}s \n")
+            # print(Fore.RED+f"AGV:{agv.ID} because of end reserved have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
             agv.waiting_time_work=0
 
 
@@ -259,7 +285,8 @@ class simulate:
                             current_agv.next_loc=current_agv.route[current_agv.routeid+1]
                             self.map[current_agv.next_loc].reservation=True
                             self.map[current_agv.next_loc].reserve_agv=current_agv.ID
-                            print(Fore.GREEN+f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n"+Fore.BLACK)
+                            logger.warning(f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n")
+                            # print(Fore.GREEN+f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n"+Fore.BLACK)
                         else:
                             pass
                     else:
@@ -267,11 +294,13 @@ class simulate:
                         current_agv.next_loc=current_agv.route[current_agv.routeid+1]
                         self.map[current_agv.next_loc].reservation=True
                         self.map[current_agv.next_loc].reserve_agv=current_agv.ID
-                        print(Fore.GREEN+f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n"+Fore.BLACK)
+                        logger.warning(f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n")
+                        # print(Fore.GREEN+f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n"+Fore.BLACK)
                 else:
                     pass
         except TypeError as ty:
-            print(Fore.RED+f"{TypeError}"+Fore.BLACK)
+            logger.error(f"{TypeError}")
+            # print(Fore.RED+f"{TypeError}"+Fore.BLACK)
 
 
 
@@ -286,6 +315,13 @@ class simulate:
             #先判断任务是否完成
             if agv.status=='finish':
                 continue
+            if len(agv.tasklist)!=0 and agv.status=="idle":
+                agv.set_task_from_tasklist()
+                agv.status="setting"
+
+            if agv.status=="setting":
+                if agv.set_route_from_task(self.map):
+                    agv.status="busy"
             #在旋转到指定位置
             vector=[self.map[agv.next_loc].x-agv.x,self.map[agv.next_loc].y-agv.y]
             rotate_diff=get_theta(vector[0],vector[1])-agv.rotate
@@ -296,7 +332,7 @@ class simulate:
                     rotate_direct=-1
                 if rotate_diff<-math.pi:
                     rotate_direct=1
-                agv.rotate+=self.step*agv.rotatespeed*rotate_direct
+                agv.rotate_step(self.step,rotate_direct)
                 if agv.rotate>2*math.pi:
                     agv.rotate=agv.rotate%(2*math.pi)
                 if agv.rotate<0:
@@ -327,22 +363,26 @@ class simulate:
                             self.re_plan_path(agv)
 
                         else:
-                            print(Fore.RED+f"AGV:{agv.ID} because of random plan have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
+                            logger.warning(f"AGV:{agv.ID} because of random plan have wait {agv.waiting_time_work}s \n")
+                            # print(Fore.RED+f"AGV:{agv.ID} because of random plan have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
                             agv.waiting_time_work=0
                 except TypeError as ty:
-                    print(Fore.RED+f"{TypeError}"+Fore.BLACK)
+                    logger.error(f"{TypeError}")
+                    # print(Fore.RED+f"{TypeError}"+Fore.BLACK)
                     agv.waiting_time_work=0
                 #continue
             else:
                 #开始前进
-                agv.x+=agv.speed*self.step*calculate_cosine(vector[0],vector[1])
-                agv.y+=agv.speed*self.step*calculate_sine(vector[0],vector[1])
+                agv.go_forward_step(self.step,vector)
+                # agv.x+=agv.speed*self.step*calculate_cosine(vector[0],vector[1])
+                # agv.y+=agv.speed*self.step*calculate_sine(vector[0],vector[1])
                 if agv.waiting_time_work!=0:
-                    print(Fore.RED+f"AGV:{agv.ID} have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
+                    logger.info(f"AGV:{agv.ID} have wait {agv.waiting_time_work}s \n")
+                    #print(Fore.RED+f"AGV:{agv.ID} have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
                     agv.waiting_time_work=0
 
             #判断是否到达下一个点
-            if math.sqrt((self.map[agv.next_loc].x-agv.x)**2+(self.map[agv.next_loc].y-agv.y)**2)<self.error:
+            if agv.status=="busy" and math.sqrt((self.map[agv.next_loc].x-agv.x)**2+(self.map[agv.next_loc].y-agv.y)**2)<self.error:
                 if agv.routeid+1!=len(agv.route)-1: #判断是否到达终点
                     agv.x=self.map[agv.next_loc].x
                     agv.y=self.map[agv.next_loc].y
@@ -352,24 +392,34 @@ class simulate:
                     agv.next_loc=agv.route[agv.routeid+1]
                     self.map[agv.last_loc].reservation=False
                     self.map[agv.last_loc].reserve_agv=0  #沒有人預定
-                    print(f"AGV:{agv.ID}")
-                    print(f"NEXT NODE:{agv.next_loc} x:{self.map[agv.next_loc].x}   y:{self.map[agv.next_loc].y}")
-                    print(f"NOW NODE:{agv.location} x:{self.map[agv.location].x}   y:{self.map[agv.location].y}")
-                    print(f"NOW LOCATION: x:{agv.x}   y:{agv.y}")
-                    print(f"NOW ROTATION: {agv.rotate} {agv.rotate/math.pi}\u03c0 ")
-                    print(f"REMAIN ROAD: "+"——>".join(str(point) for point in agv.route[agv.routeid:])+"\n")
+                    logger.info(f"AGV:{agv.ID}")
+                    logger.info(f"NEXT NODE:{agv.next_loc} x:{self.map[agv.next_loc].x}   y:{self.map[agv.next_loc].y}")
+                    logger.info(f"NOW NODE:{agv.location} x:{self.map[agv.location].x}   y:{self.map[agv.location].y}")
+                    logger.info(f"NOW LOCATION: x:{agv.x}   y:{agv.y}")
+                    logger.info(f"NOW ROTATION: {agv.rotate} {agv.rotate/math.pi}\u03c0 ")
+                    logger.info(f"REMAIN ROAD: "+"——>".join(str(point) for point in agv.route[agv.routeid:])+"\n")
                     self.map[agv.location].reservation=True
                     self.map[agv.location].reserve_agv=agv.ID
                     if self.map[agv.next_loc].reservation!=True:
                         self.map[agv.next_loc].reservation=True
                         self.map[agv.next_loc].reserve_agv=agv.ID
                 else:
-                    agv.status="finish"
-                    agv.last_loc= agv.location
-                    agv.location=agv.next_loc
-                    self.map[agv.last_loc].reservation=False
-                    self.map[agv.last_loc].reserve_agv=0
-                    print(f"AGV:{agv.ID} have finished \n")
+                        agv.status="idle"
+                        agv.last_loc= agv.location
+                        agv.location=agv.next_loc
+                        self.map[agv.last_loc].reservation=False
+                        self.map[agv.last_loc].reserve_agv=0
+                        logger.info(f"AGV:{agv.ID} have finished current state --> idle\n")
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -386,11 +436,11 @@ class simulate:
     def run(self):
         while not self.is_finished:
             self.time+=self.step
-
+            self.online_task()
             self.update_agvs()
 
             #if (self.time//self.step)%2==0:
-            self.plot()
+            #self.plot()
            # print(f"simulate time: {self.time}")
 
             tempbool=True
@@ -400,8 +450,8 @@ class simulate:
 
             self.is_finished=tempbool
 
-        print(f"Simulate Finished! Time:{self.time}\n")
-        gengrate_video()
+        logger.info(f"Simulate Finished! Time:{self.time}\n")
+        #gengrate_video()
 
 
 
@@ -412,19 +462,20 @@ class simulate:
 
 
 if __name__=="__main__":
+
     SM=simulate(dictionary_map)
     tasks={}
 
-    task1=Task(1,1,1,115,9,1,1)
+
+    task1=Task(1,1,1,25,9,1,1)
     task2=Task(1,1,1,39,10,1,1)
     task3=Task(1,1,1,38,11,1,1)
     task4=Task(1,1,1,35,12,1,1)
-    task5=Task(1,1,1,47,13,1,1)
+    task5=Task(1,1,1,37,13,1,1)
     task6=Task(1,1,1,30,16,1,1)
     task7=Task(1,1,1,41,15,1,1)
-    task8=Task(1,1,1,116,177,1,1)
-    task9=Task(1,1,1,65,179,1,1)
-    task10=Task(1,1,1,27,181,1,1)
+    task8=Task(1,1,1,26,177,1,1)
+
 
     tasks[1]=task1
     tasks[2]=task2
@@ -434,14 +485,11 @@ if __name__=="__main__":
     tasks[6]=task6
     tasks[7]=task7
     tasks[8]=task8
-    tasks[9]=task9
-    tasks[10]=task10
 
-    SM.creatAGVS(10,tasks)
+
+    SM.creatAGVS(8,tasks)
     SM.run()
-   # gengrate_video()
-   # create_gif()
-    #print(sigmoid_probability(15,1,15))
+
 
 
 
