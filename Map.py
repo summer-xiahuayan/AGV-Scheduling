@@ -98,12 +98,13 @@ class A_star:
                 child = NodeVector(neighbor)
                 child.frontNode = vector
                 child.calcGH(self.end_point)
-                vector.childNodes.append(child)
+                if not child.node.reservation:
+                    vector.childNodes.append(child)
 
-                # 添加到open集合中
-                assert isinstance(child.f, float), f'{child.f}'
-                # self.open_set.put((child, child.f))
-                self.open_set.put([child.f, child])
+                    # 添加到open集合中
+                    assert isinstance(child.f, float), f'{child.f}'
+                    # self.open_set.put((child, child.f))
+                    self.open_set.put([child.f, child])
 
                 # 找到终点
                 if neighbor == self.end_point:
@@ -179,4 +180,6 @@ def plot_map(dictionary_map,start,end):
 dictionary_map = create_map(df_Grid, df_Inventory)
 
 if __name__=="__main__":
-    plot_map(dictionary_map,20,799)
+    dictionary_map[30].reservation=True
+    print(dictionary_map[30].reservation)
+    plot_map(dictionary_map,20,600)
