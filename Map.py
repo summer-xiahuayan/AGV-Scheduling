@@ -5,8 +5,13 @@ from collections import deque
 import logging
 
 # 统一读入配置文件
-df_Grid = pd.read_csv(f"Map.csv")
-df_Inventory = pd.read_csv(f"Inventory.csv")
+# df_Grid = pd.read_csv(f"FactoryMap.csv")
+# df_Inventory = pd.read_csv(f"FactoryInventory.csv")
+
+df_Grid = pd.read_csv(f"data.csv")
+df_Inventory = pd.read_csv(f"datainventory.csv")
+
+
 
 # 节点类的形式储存地图数据
 class Grid:
@@ -129,10 +134,10 @@ def create_map(df_grid, df_inventory):
     for i in range(df_grid.shape[0]):
         neighbour = df_grid.iloc[i, 4].split(',')
         neighbour = [int(x) for x in neighbour]
-        conflict = df_grid.iloc[i, 5].split(',')
-        conflict = [int(x) for x in conflict]
+        # conflict = df_grid.iloc[i, 5].split(',')
+        # conflict = [int(x) for x in conflict]
         grid_tmp = Grid(df_grid.iloc[i, 0], df_grid.iloc[i, 1], df_grid.iloc[i, 2], df_grid.iloc[i, 3],
-                        neighbour, df_inventory.iloc[i, 1], conflict, df_grid.iloc[i, 6])
+                        neighbour, df_inventory.iloc[i, 1], [-1], df_grid.iloc[i, 6])
         dict_map[i+1] = grid_tmp
     return dict_map
 
@@ -154,11 +159,17 @@ def plot_map(dictionary_map,start,end):
             color="yellow"
 
         plt.plot(dictionary_map[i].x, dictionary_map[i].y,'.', markersize=10, color=color)
+        plt.text(dictionary_map[i].x, dictionary_map[i].y, str(i), ha='right', va='bottom')
         for neighbouri in neighbour:
-            x = [dictionary_map[i].x, dictionary_map[neighbouri].x]
+            x = [dictionary_map[i].x,dictionary_map[neighbouri].x]
             y = [dictionary_map[i].y,dictionary_map[neighbouri].y]
             # 使用plot函数画线
             plt.plot(x, y, '-k')  # '-r' 表示红色的实线
+            plt.arrow(dictionary_map[i].x, dictionary_map[i].y,
+                      (dictionary_map[neighbouri].x-dictionary_map[i].x)*0.3,
+                      (dictionary_map[neighbouri].y-dictionary_map[i].y)*0.3, head_width=0.2, head_length=0.2, fc='lightblue', ec='black')
+
+
     task_1_get =get_path(dictionary_map,start,end)
     print(task_1_get)
     i=1
@@ -171,15 +182,25 @@ def plot_map(dictionary_map,start,end):
         x = [dictionary_map[point].x, dictionary_map[task_1_get[i]].x]
         y = [dictionary_map[point].y, dictionary_map[task_1_get[i]].y]
         # 使用plot函数画线
-        plt.plot(x, y, '-b')  # '-r' 表示红色的实线
+        plt.plot(x, y, '-b',linewidth=3)  # '-r' 表示红色的实线
         i+=1
     plt.yticks(size=40, fontproperties='Times New Roman')
     plt.xticks(size=40, fontproperties='Times New Roman')
+    plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
 dictionary_map = create_map(df_Grid, df_Inventory)
 
 if __name__=="__main__":
-    dictionary_map[30].reservation=True
-    print(dictionary_map[30].reservation)
-    plot_map(dictionary_map,20,600)
+    #dictionary_map[30].reservation=True
+    #dictionary_map[10].reservation=True
+    #print(dictionary_map[30].reservation)
+    # for i in range(1,18):
+    #     dictionary_map[i].reservation=True
+    plot_map(dictionary_map,1,8)
+
+
+
+
+
+
