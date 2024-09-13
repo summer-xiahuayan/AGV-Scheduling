@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from queue import PriorityQueue
 from collections import deque
 import logging
+import math
 
 # 统一读入配置文件
 # df_Grid = pd.read_csv(f"FactoryMap.csv")
@@ -46,8 +47,8 @@ class NodeVector:
 
     @property
     def f(self):
-        #return self.h
-        return self.g*0.4 + self.h*0.6
+        return self.h
+        # return self.g*0.2 + self.h*0.8
 
     def calcGH(self, target):
         """target代表目标节点，Grid类"""
@@ -57,6 +58,11 @@ class NodeVector:
         dx = abs(target.x - self.node.x)
         dy = abs(target.y - self.node.y)
         self.h = dx + dy
+
+    def eulerDS(self, targetstart,targetend):
+        """target代表目标节点，Grid类"""
+        self.g = math.sqrt((self.node.x-targetstart.x)**2+(self.node.y-targetstart.y)**2)
+        self.h = math.sqrt((self.node.x-targetend.x)**2+(self.node.y-targetend.y)**2)
 
     def __lt__(self, other):
         return self.f < other.f
@@ -103,7 +109,10 @@ class A_star:
                 # 初始化邻居，并计算g和h
                 child = NodeVector(neighbor)
                 child.frontNode = vector
-                child.calcGH(self.end_point)
+                #曼哈顿距离
+                #child.calcGH(self.end_point)
+                #欧拉距离
+                child.eulerDS(self.start_point,self.end_point)
                 if not child.node.reservation:
                     vector.childNodes.append(child)
 
@@ -199,7 +208,7 @@ if __name__=="__main__":
     #print(dictionary_map[30].reservation)
     # for i in range(1,18):
     #     dictionary_map[i].reservation=True
-    plot_map(dictionary_map,2,16)
+    plot_map(dictionary_map,3,8)
 
 
 

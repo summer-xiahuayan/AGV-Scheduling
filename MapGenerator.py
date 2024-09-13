@@ -2,18 +2,37 @@ import copy
 import csv
 from matplotlib import pyplot as plt
 import math
+
+
+
+#AGV小车的长度
 Agv_Length=1.8
-# Factory_Edge_X=[17.4,17.4,34.1887,42.3887,48.5887,55.6387,62.9045,62.9045,55.6387,48.5887,42.3887,34.1887,28.5,27.5,26.5,25.5,24.5]
-# Factory_Edge_Y=[-14.26,-18.75,-23.2283,-23.2283,-23.2283,-23.2283,-23.2283,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9]
+#工厂的边界信息 x,y 即工位停靠点需要按顺序存放
+Factory_Edge_X=[17.4,17.4,34.1887,42.3887,48.5887,55.6387,62.9045,62.9045,55.6387,48.5887,42.3887,34.1887,28.5,27.5,26.5,25.5,24.5]
+Factory_Edge_Y=[-14.26,-18.75,-23.2283,-23.2283,-23.2283,-23.2283,-23.2283,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9]
 Error=0.1
-Factory_Edge_X=[0,20,20,0]
-Factory_Edge_Y=[0,0,20,20]
+# Factory_Edge_X=[0,20,20,0]
+# Factory_Edge_Y=[0,0,20,20]
 
 def get_edge_neighbour(x,y,innerxlist,innerylist):
     dx=[int(abs(x-xi)) for xi in innerxlist]
     dy=[int(abs(y-yi)) for yi in innerylist]
     manhattan_distance=[dx[i]+dy[i] for i in range(len(dx))]
     return manhattan_distance.index(min(manhattan_distance))
+
+
+def get_16_neighbour(innerxlist,innerylist):
+    neighbourlist=[]
+    for i in range(len(innerxlist)):
+        point_neighbourlist=[]
+        for j in range(len(innerxlist)):
+            distance=math.sqrt((innerxlist[j]-innerxlist[i])**2+(innerylist[j]-innerylist[i])**2)
+            if distance>0 and distance <=math.sqrt(5)*Agv_Length+Error:
+                point_neighbourlist.append(j)
+        temp=copy.deepcopy(point_neighbourlist)
+        neighbourlist.append(temp)
+    return neighbourlist
+
 
 
 def get_8_neighbour(innerxlist,innerylist):
