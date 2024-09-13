@@ -46,7 +46,8 @@ class NodeVector:
 
     @property
     def f(self):
-        return self.g + self.h
+        #return self.h
+        return self.g*0.4 + self.h*0.6
 
     def calcGH(self, target):
         """target代表目标节点，Grid类"""
@@ -111,6 +112,7 @@ class A_star:
                     # self.open_set.put((child, child.f))
                     self.open_set.put([child.f, child])
 
+
                 # 找到终点
                 if neighbor == self.end_point:
                     self.found_end_node = child
@@ -146,7 +148,7 @@ def get_path(map,start,end):
 
 def plot_map(dictionary_map,start,end):
     #fig = plt.figure()
-    fig=plt.figure(figsize=(30, 15))  # 设置DPI为100
+    fig=plt.figure(figsize=(20, 20))  # 设置DPI为100
     for i in range(1,len(dictionary_map)+1):
         #print(i)
         neighbour = dictionary_map[i].neighbor
@@ -197,7 +199,7 @@ if __name__=="__main__":
     #print(dictionary_map[30].reservation)
     # for i in range(1,18):
     #     dictionary_map[i].reservation=True
-    plot_map(dictionary_map,1,8)
+    plot_map(dictionary_map,2,16)
 
 
 

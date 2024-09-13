@@ -3,10 +3,11 @@ import csv
 from matplotlib import pyplot as plt
 import math
 Agv_Length=1.8
-Factory_Edge_X=[17.4,17.4,34.1887,42.3887,48.5887,55.6387,62.9045,62.9045,55.6387,48.5887,42.3887,34.1887,28.5,27.5,26.5,25.5,24.5]
-Factory_Edge_Y=[-14.26,-18.75,-23.2283,-23.2283,-23.2283,-23.2283,-23.2283,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9]
+# Factory_Edge_X=[17.4,17.4,34.1887,42.3887,48.5887,55.6387,62.9045,62.9045,55.6387,48.5887,42.3887,34.1887,28.5,27.5,26.5,25.5,24.5]
+# Factory_Edge_Y=[-14.26,-18.75,-23.2283,-23.2283,-23.2283,-23.2283,-23.2283,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9]
 Error=0.1
-
+Factory_Edge_X=[0,20,20,0]
+Factory_Edge_Y=[0,0,20,20]
 
 def get_edge_neighbour(x,y,innerxlist,innerylist):
     dx=[int(abs(x-xi)) for xi in innerxlist]
@@ -42,7 +43,9 @@ def Writecsv(Factory_Edge_X,Factory_Edge_Y,innerxlist,innerylist):
         id=get_edge_neighbour(Factory_Edge_X[i],Factory_Edge_Y[i],innerxlist,innerylist)+len(Factory_Edge_X)+1
         row.append(id)
         #用于存储inner节点到edge的邻居信息
-        innertoedge[id]=i+1
+        if id not in innertoedge.keys():
+            innertoedge[id]=[]
+        innertoedge[id].append(i+1)
         row.append(-1)
         row.append(i+1)
         temp=copy.deepcopy(row)
@@ -58,7 +61,7 @@ def Writecsv(Factory_Edge_X,Factory_Edge_Y,innerxlist,innerylist):
         row.append(1)
         neighbour=','.join(str(num+len(Factory_Edge_X)+1) for num in neighbourlist[id])
         if i+1 in innertoedge.keys():
-            neighbour+=','+str(innertoedge[i+1])
+            neighbour+=','+','.join(str(num) for num in innertoedge[i+1])
         row.append(neighbour)
         row.append(-1)
         row.append(i+1)
