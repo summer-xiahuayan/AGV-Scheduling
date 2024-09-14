@@ -5,6 +5,7 @@ class AGV:
         self.task = None  # 实时任务编号task_list[0]
         self.tasklist = task_list  # 已规划任务清单
         self.route = []  # 从 任务库 中导出对应任务编号的任务路径序列，并将其赋予叉车route_list[self.task]
+        self.routeid=0
         self.location = simul_loc  # 位置节点编号self.route[2]
         self.last_loc = None  # 序列中上一目标位置编号self.route[0]
         self.next_loc = None  # 序列中下一目标位置编号self.route[2]
@@ -14,6 +15,11 @@ class AGV:
         self.end_state = (0, False)  # 车辆任务结束状态，第一项表示结束时间，第二项表示车辆是否已完成所有任务
         self.waiting_time_park = 0  # 表示车辆因为控制策略而等待的时间（在停靠点等待）
         self.waiting_time_work = 0  # 表示车辆因为控制策略而等待的时间（行进过程中）
+        self.speed=1
+        self.x=0
+        self.y=0
+        self.rotatespeed=10
+        self.rotation=0
 
     def get_process(self, task_list: dict):
         if self.task is None:

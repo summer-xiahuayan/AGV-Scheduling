@@ -4,7 +4,7 @@ from queue import PriorityQueue
 from collections import deque
 import logging
 import math
-
+import os
 # 统一读入配置文件
 # df_Grid = pd.read_csv(f"FactoryMap.csv")
 # df_Inventory = pd.read_csv(f"FactoryInventory.csv")
@@ -182,7 +182,7 @@ def plot_map(dictionary_map,start,end):
 
 
     task_1_get =get_path(dictionary_map,start,end)
-    print(task_1_get)
+   # print(task_1_get)
     i=1
     for point in task_1_get:
 
@@ -198,7 +198,58 @@ def plot_map(dictionary_map,start,end):
     plt.yticks(size=40, fontproperties='Times New Roman')
     plt.xticks(size=40, fontproperties='Times New Roman')
     plt.gca().set_aspect('equal', adjustable='box')
-    plt.show()
+    #plt.show()
+    return plt
+
+
+
+def plot_route_map(dictionary_map,route):
+    #fig = plt.figure()
+    fig=plt.figure(figsize=(20, 20))  # 设置DPI为100
+    for i in range(1,len(dictionary_map)+1):
+        #print(i)
+        neighbour = dictionary_map[i].neighbor
+        neighbour = [int(x) for x in neighbour]
+        if dictionary_map[i].type==1:
+            color="black"
+        elif dictionary_map[i].type==2:
+            color="red"
+        else:
+            color="yellow"
+
+        plt.plot(dictionary_map[i].x, dictionary_map[i].y,'.', markersize=10, color=color)
+        plt.text(dictionary_map[i].x, dictionary_map[i].y, str(i), ha='right', va='bottom')
+        for neighbouri in neighbour:
+            x = [dictionary_map[i].x,dictionary_map[neighbouri].x]
+            y = [dictionary_map[i].y,dictionary_map[neighbouri].y]
+            # 使用plot函数画线
+            plt.plot(x, y, '-k')  # '-r' 表示红色的实线
+            plt.arrow(dictionary_map[i].x, dictionary_map[i].y,
+                      (dictionary_map[neighbouri].x-dictionary_map[i].x)*0.3,
+                      (dictionary_map[neighbouri].y-dictionary_map[i].y)*0.3, head_width=0.2, head_length=0.2, fc='lightblue', ec='black')
+
+
+    task_1_get =route
+    # print(task_1_get)
+    i=1
+    for point in task_1_get:
+
+        if i==len(task_1_get):
+            break
+        #print(point)
+        #print(task_1_get[i])
+        x = [dictionary_map[point].x, dictionary_map[task_1_get[i]].x]
+        y = [dictionary_map[point].y, dictionary_map[task_1_get[i]].y]
+        # 使用plot函数画线
+        plt.plot(x, y, '-b',linewidth=3)  # '-r' 表示红色的实线
+        i+=1
+    plt.yticks(size=40, fontproperties='Times New Roman')
+    plt.xticks(size=40, fontproperties='Times New Roman')
+    plt.gca().set_aspect('equal', adjustable='box')
+    #plt.show()
+    return plt
+
+
 
 dictionary_map = create_map(df_Grid, df_Inventory)
 
@@ -209,6 +260,49 @@ if __name__=="__main__":
     # for i in range(1,18):
     #     dictionary_map[i].reservation=True
     plot_map(dictionary_map,3,8)
+
+
+    # import imageio
+    # import matplotlib.pyplot as plt
+    #
+    # # 假设你有一个图片列表
+    # images = []
+    # for i in range(10):  # 假设有10张图片
+    #     fig, ax = plt.subplots()
+    #     ax.plot([1, 2, 3], [1, 4, 9])  # 画一些图形
+    #     ax.set_title(f'Frame {i}')
+    #     # 保存当前图形为图片
+    #     fig.savefig(f'temp_frame_{i}.png')
+    #     images.append(imageio.imread(f'temp_frame_{i}.png'))
+    #     plt.close(fig)  # 关闭图形，避免内存泄漏
+    #
+    # # 将图片列表写入视频
+    # imageio.mimsave('animation.gif', images, fps=5)  # 保存为GIF
+    # # 或者保存为MP4格式的视频
+    # imageio.mimsave('animation.mp4', images, fps=5)
+    #
+    # # 清理临时图片
+    # for i in range(10):
+    #     os.remove(f'temp_frame_{i}.png')
+
+    # import matplotlib.pyplot as plt
+    # import matplotlib.patches as patches
+    #
+    # # 创建一个图和一个坐标轴
+    # fig, ax = plt.subplots()
+    #
+    # # 创建一个矩形（方块）
+    # # 参数为：(x, y, width, height)
+    # rect = patches.Rectangle((0.1, 0.1), 0.1, 0.1, linewidth=1, edgecolor='r', facecolor='none')
+    #
+    # # 将矩形添加到坐标轴中
+    # ax.add_patch(rect)
+    #
+    # # 显示图形
+    # plt.show()
+
+
+
 
 
 
