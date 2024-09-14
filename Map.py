@@ -203,7 +203,7 @@ def plot_map(dictionary_map,start,end):
 
 
 
-def plot_route_map(dictionary_map,route):
+def plot_route_map(dictionary_map,routeslist):
     #fig = plt.figure()
     fig=plt.figure(figsize=(20, 20))  # 设置DPI为100
     for i in range(1,len(dictionary_map)+1):
@@ -228,25 +228,25 @@ def plot_route_map(dictionary_map,route):
                       (dictionary_map[neighbouri].x-dictionary_map[i].x)*0.3,
                       (dictionary_map[neighbouri].y-dictionary_map[i].y)*0.3, head_width=0.2, head_length=0.2, fc='lightblue', ec='black')
 
+    for task_1_get in routeslist:
+        #task_1_get =route
+        # print(task_1_get)
+        i=1
+        for point in task_1_get:
 
-    task_1_get =route
-    # print(task_1_get)
-    i=1
-    for point in task_1_get:
-
-        if i==len(task_1_get):
-            break
-        #print(point)
-        #print(task_1_get[i])
-        x = [dictionary_map[point].x, dictionary_map[task_1_get[i]].x]
-        y = [dictionary_map[point].y, dictionary_map[task_1_get[i]].y]
-        # 使用plot函数画线
-        plt.plot(x, y, '-b',linewidth=3)  # '-r' 表示红色的实线
-        i+=1
+            if i==len(task_1_get):
+                break
+            #print(point)
+            #print(task_1_get[i])
+            x = [dictionary_map[point].x, dictionary_map[task_1_get[i]].x]
+            y = [dictionary_map[point].y, dictionary_map[task_1_get[i]].y]
+            # 使用plot函数画线
+            plt.plot(x, y, '-b',linewidth=3)  # '-r' 表示红色的实线
+            i+=1
     plt.yticks(size=40, fontproperties='Times New Roman')
     plt.xticks(size=40, fontproperties='Times New Roman')
     plt.gca().set_aspect('equal', adjustable='box')
-    #plt.show()
+        #plt.show()
     return plt
 
 
