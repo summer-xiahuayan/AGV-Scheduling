@@ -3,12 +3,13 @@ import copy
 from matplotlib import pyplot as plt
 
 from MapGenerator import Agv_Length
-from Map import dictionary_map,get_path,plot_route_map
+from Map import dictionary_map, get_path, plot_route_map, NodeVector, Grid
 from AGV import AGV,Task
 import imageio
 import os
 import math
 from tqdm import tqdm
+from colorama import Fore
 
 
 
@@ -59,7 +60,7 @@ def gengrate_video():
     folder_path = f'imagedata'
 
     # 指定输出视频的路径和文件名
-    video_path = 'output_video_2agv.mp4'
+    video_path = 'output_video_5agv.mp4'
 
     # 获取文件夹中所有图片文件的路径
     image_files = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(('.png', '.jpg', '.jpeg'))]
@@ -78,7 +79,7 @@ def gengrate_video():
 
     #print(sorted_list)
     # 读取图片并生成视频
-    with imageio.get_writer(video_path, fps=24) as video:
+    with imageio.get_writer(video_path, fps=17) as video:
 
         for i,image_file in enumerate(tqdm(sorted_list,disable=False)):
             image = imageio.imread(image_file)
@@ -156,12 +157,15 @@ class simulate:
 
     def creatAGVS(self,num,task):
         for i in range(1,num+1):
-            agv=AGV(i,task[i].start,1,[])
+            agv=AGV(i,task[i].start,i,[])
             agv.route=get_path(self.map,agv.park_loc,task[i].start)+get_path(self.map,task[i].start,task[i].end)[1:]
             agv.status="busy"
+            agv.task=task[i]
             print(agv.route)
             agv.location=agv.route[0]
             agv.next_loc=agv.route[1]
+            #self.map[agv.location].reservation=True
+            #self.map[agv.next_loc].reservation=True
             agv.x=self.map[agv.park_loc].x
             agv.y=self.map[agv.park_loc].y
             temp=copy.deepcopy(agv)
@@ -171,6 +175,7 @@ class simulate:
         ax=plot_route_map(self.agvs)
         self.frame+=1
         plt.savefig(f'imagedata\\temp_frame_{self.frame}.png')
+
 
     def update_agvs(self):
         for Key,agv in self.agvs.items():
@@ -187,6 +192,25 @@ class simulate:
             else:
                 agv.rotate=get_theta(vector[0],vector[1])
 
+            assert isinstance(self.map[agv.location],Grid),"self.map[agv.location] is not an instance of Grid"
+            assert isinstance(self.map[agv.next_loc],Grid),"self.map[agv.next_loc] is not an instance of Grid"
+
+            if  self.map[agv.next_loc].reservation==True and self.map[agv.next_loc].reserve_agv!=agv.ID:
+                agv.waiting_time_work+=self.step
+                if agv.waiting_time_work>Agv_Length*2/agv.speed/self.step:
+                    assert isinstance(agv.task,Task),"agv.task is not an instance of Task"
+                    start=agv.task.start
+                    end=agv.task.end
+                    if start in agv.route:
+                        agv.route=agv.route[0:agv.routeid]+get_path(self.map,agv.location,start)+get_path(self.map,start,end)[1:]
+                    else:
+                        agv.route=agv.route[0:agv.routeid]+get_path(self.map,agv.location,end)
+                    print(f"AGV:{agv.ID} path have re-plan {agv.route}")
+                continue
+            else:
+                if agv.waiting_time_work!=0:
+                    print(Fore.RED+f"AGV:{agv.ID} have wait {agv.waiting_time_work}s"+Fore.BLACK)
+                    agv.waiting_time_work=0
 
 
             agv.x+=agv.speed*self.step*calculate_cosine(vector[0],vector[1])
@@ -199,6 +223,16 @@ class simulate:
                     agv.routeid=agv.routeid+1
                     agv.location=agv.next_loc
                     agv.next_loc=agv.route[agv.routeid+1]
+
+                    self.map[agv.location].reservation=True
+                    self.map[agv.next_loc].reservation=True
+                    self.map[agv.location].reserve_agv=agv.ID
+                    self.map[agv.next_loc].reserve_agv=agv.ID
+
+                    self.map[agv.last_loc].reservation=False
+                    self.map[agv.last_loc].reserve_agv=0  #沒有人預定
+
+
                     print(f"AGV:{agv.ID}")
                     print(f"next node:{agv.next_loc} x:{self.map[agv.next_loc].x}   y:{self.map[agv.next_loc].y}")
                     print(f"now node:{agv.location} x:{self.map[agv.location].x}   y:{self.map[agv.location].y}")
@@ -212,9 +246,9 @@ class simulate:
 
             self.update_agvs()
 
-            #if (self.time//self.step)%8==0:
-            self.plot()
-            print(f"simulate time: {self.time}")
+            if (self.time//self.step)%4==0:
+                self.plot()
+           # print(f"simulate time: {self.time}")
 
             tempbool=True
             for Key,agv in self.agvs.items():
@@ -235,16 +269,25 @@ class simulate:
 
 
 if __name__=="__main__":
-    # SM=simulate(dictionary_map)
-    # tasks={}
-    # task1=Task(1,1,1,2,3,1,1)
-    # task2=Task(1,1,1,16,14,1,1)
-    # tasks[1]=task1
-    # tasks[2]=task2
-    # SM.creatAGVS(2,tasks)
-    # SM.run()
-    # #gengrate_video()
-    create_gif()
+    SM=simulate(dictionary_map)
+    tasks={}
+
+    task1=Task(1,1,1,6,15,1,1)
+    task2=Task(1,1,1,8,13,1,1)
+    task3=Task(1,1,1,10,14,1,1)
+    task4=Task(1,1,1,12,17,1,1)
+    task5=Task(1,1,1,14,6,1,1)
+
+    tasks[1]=task1
+    tasks[2]=task2
+    tasks[3]=task3
+    tasks[4]=task4
+    tasks[5]=task5
+
+    SM.creatAGVS(5,tasks)
+    SM.run()
+    #gengrate_video()
+   # create_gif()
 
 
 

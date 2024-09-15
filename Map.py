@@ -1,3 +1,5 @@
+import copy
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from queue import PriorityQueue
@@ -32,6 +34,7 @@ class Grid:
         self.neighbor = neighbor
         self.entrance = entrance  # 库位的入口节点（道路节点则为其本身）
         self.reservation = False
+        self.reserve_agv = 0
         if state == -1:
             self.state = None
         else:
@@ -272,7 +275,7 @@ def plot_route_map(agvs):
 
 
 dictionary_map = create_map(df_Grid, df_Inventory)
-
+#mapimg=plot_map(dictionary_map,0,0)
 
 if __name__=="__main__":
 
