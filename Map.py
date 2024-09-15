@@ -4,7 +4,13 @@ from queue import PriorityQueue
 from collections import deque
 import logging
 import math
+from MapGenerator import Agv_Length,Agv_Width
+import matplotlib.patches as patches
+import matplotlib.image as mpimg
 import os
+
+from AGV import AGV
+
 # 统一读入配置文件
 # df_Grid = pd.read_csv(f"FactoryMap.csv")
 # df_Inventory = pd.read_csv(f"FactoryInventory.csv")
@@ -12,7 +18,9 @@ import os
 df_Grid = pd.read_csv(f"data.csv")
 df_Inventory = pd.read_csv(f"datainventory.csv")
 
-
+COLOR = ['red', 'blue', 'yellow', 'orange', 'green', 'moccasin', 'purple', 'pink', 'navajowhite', 'Thistle',
+     'Magenta', 'SlateBlue', 'RoyalBlue', 'Aqua', 'floralwhite', 'ghostwhite', 'goldenrod', 'mediumslateblue',
+     'navajowhite','navy', 'sandybrown']
 
 # 节点类的形式储存地图数据
 class Grid:
@@ -157,7 +165,7 @@ def get_path(map,start,end):
 
 def plot_map(dictionary_map,start,end):
     #fig = plt.figure()
-    fig=plt.figure(figsize=(20, 20))  # 设置DPI为100
+    fig,ax= plt.subplots(figsize=(30, 10))  # 设置DPI为100
     for i in range(1,len(dictionary_map)+1):
         #print(i)
         neighbour = dictionary_map[i].neighbor
@@ -169,137 +177,108 @@ def plot_map(dictionary_map,start,end):
         else:
             color="yellow"
 
-        plt.plot(dictionary_map[i].x, dictionary_map[i].y,'.', markersize=10, color=color)
-        plt.text(dictionary_map[i].x, dictionary_map[i].y, str(i), ha='right', va='bottom')
+        ax.plot(dictionary_map[i].x, dictionary_map[i].y,'.', markersize=10, color=color)
+        ax.text(dictionary_map[i].x, dictionary_map[i].y, str(i), ha='right', va='bottom')
         for neighbouri in neighbour:
             x = [dictionary_map[i].x,dictionary_map[neighbouri].x]
             y = [dictionary_map[i].y,dictionary_map[neighbouri].y]
             # 使用plot函数画线
-            plt.plot(x, y, '-k')  # '-r' 表示红色的实线
-            plt.arrow(dictionary_map[i].x, dictionary_map[i].y,
+            ax.plot(x, y, '-k')  # '-r' 表示红色的实线
+            ax.arrow(dictionary_map[i].x, dictionary_map[i].y,
                       (dictionary_map[neighbouri].x-dictionary_map[i].x)*0.3,
                       (dictionary_map[neighbouri].y-dictionary_map[i].y)*0.3, head_width=0.2, head_length=0.2, fc='lightblue', ec='black')
 
 
-    task_1_get =get_path(dictionary_map,start,end)
-   # print(task_1_get)
-    i=1
-    for point in task_1_get:
-
-        if i==len(task_1_get):
-            break
-        #print(point)
-        print(task_1_get[i])
-        x = [dictionary_map[point].x, dictionary_map[task_1_get[i]].x]
-        y = [dictionary_map[point].y, dictionary_map[task_1_get[i]].y]
-        # 使用plot函数画线
-        plt.plot(x, y, '-b',linewidth=3)  # '-r' 表示红色的实线
-        i+=1
-    plt.yticks(size=40, fontproperties='Times New Roman')
-    plt.xticks(size=40, fontproperties='Times New Roman')
-    plt.gca().set_aspect('equal', adjustable='box')
+   #  task_1_get =get_path(dictionary_map,start,end)
+   # # print(task_1_get)
+   #  i=1
+   #  for point in task_1_get:
+   #
+   #      if i==len(task_1_get):
+   #          break
+   #      #print(point)
+   #      print(task_1_get[i])
+   #      x = [dictionary_map[point].x, dictionary_map[task_1_get[i]].x]
+   #      y = [dictionary_map[point].y, dictionary_map[task_1_get[i]].y]
+   #      # 使用plot函数画线
+   #      plt.plot(x, y, '-b',linewidth=3)  # '-r' 表示红色的实线
+   #      i+=1
+   #  plt.yticks(size=40, fontproperties='Times New Roman')
+   #  plt.xticks(size=40, fontproperties='Times New Roman')
+   #  plt.gca().set_aspect('equal', adjustable='box')
     #plt.show()
-    return plt
+    #plt.savefig(f'map.png')
+
+    return ax
 
 
 
-def plot_route_map(dictionary_map,routeslist):
-    #fig = plt.figure()
-    fig=plt.figure(figsize=(20, 20))  # 设置DPI为100
-    for i in range(1,len(dictionary_map)+1):
-        #print(i)
-        neighbour = dictionary_map[i].neighbor
-        neighbour = [int(x) for x in neighbour]
-        if dictionary_map[i].type==1:
-            color="black"
-        elif dictionary_map[i].type==2:
-            color="red"
-        else:
-            color="yellow"
 
-        plt.plot(dictionary_map[i].x, dictionary_map[i].y,'.', markersize=10, color=color)
-        plt.text(dictionary_map[i].x, dictionary_map[i].y, str(i), ha='right', va='bottom')
-        for neighbouri in neighbour:
-            x = [dictionary_map[i].x,dictionary_map[neighbouri].x]
-            y = [dictionary_map[i].y,dictionary_map[neighbouri].y]
-            # 使用plot函数画线
-            plt.plot(x, y, '-k')  # '-r' 表示红色的实线
-            plt.arrow(dictionary_map[i].x, dictionary_map[i].y,
-                      (dictionary_map[neighbouri].x-dictionary_map[i].x)*0.3,
-                      (dictionary_map[neighbouri].y-dictionary_map[i].y)*0.3, head_width=0.2, head_length=0.2, fc='lightblue', ec='black')
+def plot_route_map(agvs):
+    # 创建一个图形和坐标轴
+    #fig,ax= plt.subplots()
+    ax=plot_map(dictionary_map,0,0)
 
-    for task_1_get in routeslist:
-        #task_1_get =route
-        # print(task_1_get)
+    for Key,agv in agvs.items():
+        assert isinstance(agv,AGV),"obj is not an instance of AGV"
+        crossx=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.cos(agv.rotate+math.atan(Agv_Width/Agv_Length))
+        crossy=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.sin(agv.rotate+math.atan(Agv_Width/Agv_Length))
+        crossx_=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.cos(agv.rotate-math.atan(Agv_Width/Agv_Length))
+        crossy_=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.sin(agv.rotate-math.atan(Agv_Width/Agv_Length))
+        forward_left=(crossx+agv.x,crossy+agv.y)
+        backword_right=(agv.x-crossx,agv.y-crossy)
+        forward_right=(crossx_+agv.x,crossy_+agv.y)
+        backword_left=(agv.x-crossx_,agv.y-crossy_)
+
+        x = [agv.x, dictionary_map[agv.next_loc].x]
+        y = [agv.y, dictionary_map[agv.next_loc].y]
+        # 使用plot函数画线
+        ax.plot(x, y, COLOR[Key],linewidth=3)
+
+        task_1_get=agv.route[agv.routeid+1:]
         i=1
         for point in task_1_get:
 
             if i==len(task_1_get):
                 break
-            #print(point)
+             #print(point)
             #print(task_1_get[i])
             x = [dictionary_map[point].x, dictionary_map[task_1_get[i]].x]
             y = [dictionary_map[point].y, dictionary_map[task_1_get[i]].y]
-            # 使用plot函数画线
-            plt.plot(x, y, '-b',linewidth=3)  # '-r' 表示红色的实线
+             # 使用plot函数画线
+            ax.plot(x, y, COLOR[Key],linewidth=3)  # '-r' 表示红色的实线
             i+=1
-    plt.yticks(size=40, fontproperties='Times New Roman')
-    plt.xticks(size=40, fontproperties='Times New Roman')
-    plt.gca().set_aspect('equal', adjustable='box')
+
+        # 定义矩形四个角的坐标
+        # 假设这四个点分别是矩形的左上角、右上角、右下角、左下角
+        points = [forward_left, forward_right,backword_right ,backword_left]
+        # 创建一个多边形
+        polygon = patches.Polygon(points, closed=True, edgecolor=COLOR[Key], facecolor=COLOR[Key])
+        # 将多边形添加到坐标轴
+        ax.add_patch(polygon)
+
+    # # 设置y轴的范围
+    ax.set_ylim(-8, -24)
+    # # 设置y轴的范围
+    ax.set_xlim(15, 65)
+    return ax
         #plt.show()
-    return plt
+
+
+
+
+
 
 
 
 dictionary_map = create_map(df_Grid, df_Inventory)
 
+
 if __name__=="__main__":
-    #dictionary_map[30].reservation=True
-    #dictionary_map[10].reservation=True
-    #print(dictionary_map[30].reservation)
-    # for i in range(1,18):
-    #     dictionary_map[i].reservation=True
-    plot_map(dictionary_map,3,8)
 
+   # plot_map(dictionary_map,3,8)
+   plot_route_map(dictionary_map,"agvs")
 
-    # import imageio
-    # import matplotlib.pyplot as plt
-    #
-    # # 假设你有一个图片列表
-    # images = []
-    # for i in range(10):  # 假设有10张图片
-    #     fig, ax = plt.subplots()
-    #     ax.plot([1, 2, 3], [1, 4, 9])  # 画一些图形
-    #     ax.set_title(f'Frame {i}')
-    #     # 保存当前图形为图片
-    #     fig.savefig(f'temp_frame_{i}.png')
-    #     images.append(imageio.imread(f'temp_frame_{i}.png'))
-    #     plt.close(fig)  # 关闭图形，避免内存泄漏
-    #
-    # # 将图片列表写入视频
-    # imageio.mimsave('animation.gif', images, fps=5)  # 保存为GIF
-    # # 或者保存为MP4格式的视频
-    # imageio.mimsave('animation.mp4', images, fps=5)
-    #
-    # # 清理临时图片
-    # for i in range(10):
-    #     os.remove(f'temp_frame_{i}.png')
-
-    # import matplotlib.pyplot as plt
-    # import matplotlib.patches as patches
-    #
-    # # 创建一个图和一个坐标轴
-    # fig, ax = plt.subplots()
-    #
-    # # 创建一个矩形（方块）
-    # # 参数为：(x, y, width, height)
-    # rect = patches.Rectangle((0.1, 0.1), 0.1, 0.1, linewidth=1, edgecolor='r', facecolor='none')
-    #
-    # # 将矩形添加到坐标轴中
-    # ax.add_patch(rect)
-    #
-    # # 显示图形
-    # plt.show()
 
 
 

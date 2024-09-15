@@ -1,3 +1,6 @@
+import math
+
+
 class AGV:
     def __init__(self, num, simul_loc, park_grid, task_list):
         self.ID = num
@@ -18,7 +21,8 @@ class AGV:
         self.speed=1
         self.x=0
         self.y=0
-        self.rotatespeed=10
+        self.rotatespeed=2*math.pi/8
+        self.rotate=0
         self.rotation=0
 
     def get_process(self, task_list: dict):
