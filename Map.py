@@ -233,6 +233,11 @@ def plot_route_map(agvs):
         forward_right=(crossx_+agv.x,crossy_+agv.y)
         backword_left=(agv.x-crossx_,agv.y-crossy_)
 
+        head_backword_right=(forward_right[0]+(backword_right[0]-forward_right[0])*0.3,forward_right[1]+(backword_right[1]-forward_right[1])*0.3)
+        head_backword_left=(forward_left[0]+(backword_left[0]-forward_left[0])*0.3,forward_left[1]+(backword_left[1]-forward_left[1])*0.3)
+
+
+
         x = [agv.x, dictionary_map[agv.next_loc].x]
         y = [agv.y, dictionary_map[agv.next_loc].y]
         # 使用plot函数画线
@@ -255,13 +260,21 @@ def plot_route_map(agvs):
         # 定义矩形四个角的坐标
         # 假设这四个点分别是矩形的左上角、右上角、右下角、左下角
         points = [forward_left, forward_right,backword_right ,backword_left]
+        head_point=[forward_left,forward_right,head_backword_right,head_backword_left]
+        # print(points)
+        # print(head_point)
         # 创建一个多边形
-        polygon = patches.Polygon(points, closed=True, edgecolor=COLOR[Key], facecolor=COLOR[Key])
+        polygon = patches.Polygon(points, closed=True, edgecolor="black", facecolor=COLOR[Key])
+        # 将多边形添加到坐标轴
+        ax.add_patch(polygon)
+
+        # 创建一个多边形
+        polygon = patches.Polygon(head_point, closed=True, edgecolor="black", facecolor=COLOR[0])
         # 将多边形添加到坐标轴
         ax.add_patch(polygon)
 
     # # 设置y轴的范围
-    ax.set_ylim(-8, -24)
+    ax.set_ylim(-24, -8)
     # # 设置y轴的范围
     ax.set_xlim(15, 65)
     return ax

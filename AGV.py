@@ -24,6 +24,8 @@ class AGV:
         self.rotatespeed=2*math.pi/8
         self.rotate=0
         self.rotation=0
+        self.neighbour=-1
+        self.lastneighbour=None
 
     def get_process(self, task_list: dict):
         if self.task is None:

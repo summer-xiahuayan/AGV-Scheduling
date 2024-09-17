@@ -1,4 +1,5 @@
 import copy
+import random
 
 from matplotlib import pyplot as plt
 
@@ -139,7 +140,11 @@ def get_theta(x,y):
     # 计算弧度值
     theta = math.atan2(y, x)
 
-    return theta
+    #返回0——2*pi
+    if theta<0:
+        return 2*math.pi+theta
+    else:
+        return theta
 
 
 
@@ -150,6 +155,7 @@ class simulate:
         self.step=0.1 #仿真时间步
         self.agvs= {} #AGV小车字典
         self.error=0.06
+        #self.rotate_error=
         self.frame=0
         self.is_finished=False
 
@@ -177,44 +183,103 @@ class simulate:
         plt.savefig(f'imagedata\\temp_frame_{self.frame}.png')
 
 
+    def judje_cross_agv(self,agv):
+        invetory=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+        assert isinstance(agv,AGV),"obj is not an instance of AGV"
+        midpoint=[self.map[agv.location].x+(self.map[agv.next_loc].x-self.map[agv.location].x)/2,
+                  self.map[agv.location].y+(self.map[agv.next_loc].y-self.map[agv.location].y)/2]
+        assert isinstance(self.map[agv.location],Grid),"self.map[agv.location] is not an instance of AGV"
+        cross_neighbour=[point for point in self.map[agv.location].neighbor if
+                         math.sqrt((self.map[point].x-midpoint[0])**2+(self.map[point].y-midpoint[1])**2)<Agv_Length and
+                         point!=agv.next_loc and point not in invetory]
+        if len(cross_neighbour)!=0:
+            temp=True
+            for point in cross_neighbour:
+                    temp=temp and self.map[point].reservation
+            return temp
+        else :
+            return False
+
+
+
     def update_agvs(self):
         for Key,agv in self.agvs.items():
             assert isinstance(agv,AGV),"obj is not an instance of AGV"
+            #先判断任务是否完成
             if agv.status=='finish':
                 continue
+
+
+            #在旋转到指定位置
             vector=[self.map[agv.next_loc].x-agv.x,self.map[agv.next_loc].y-agv.y]
-            #旋转逻辑
+
             rotate_diff=get_theta(vector[0],vector[1])-agv.rotate
             if abs(rotate_diff)>0.08:
+                #顺时针，逆时针旋转逻辑
+
                 rotate_direct=1 if rotate_diff>0 else -1
+                if rotate_diff>math.pi:
+                    rotate_direct=-1
+                if rotate_diff<-math.pi:
+                    rotate_direct=1
                 agv.rotate+=self.step*agv.rotatespeed*rotate_direct
+                if agv.rotate>2*math.pi:
+                    agv.rotate=agv.rotate%(2*math.pi)
+                if agv.rotate<0:
+                    agv.rotate=agv.rotate+2*math.pi
                 continue
             else:
                 agv.rotate=get_theta(vector[0],vector[1])
 
+
             assert isinstance(self.map[agv.location],Grid),"self.map[agv.location] is not an instance of Grid"
             assert isinstance(self.map[agv.next_loc],Grid),"self.map[agv.next_loc] is not an instance of Grid"
 
-            if  self.map[agv.next_loc].reservation==True and self.map[agv.next_loc].reserve_agv!=agv.ID:
-                agv.waiting_time_work+=self.step
-                if agv.waiting_time_work>Agv_Length*2/agv.speed/self.step:
-                    assert isinstance(agv.task,Task),"agv.task is not an instance of Task"
-                    start=agv.task.start
-                    end=agv.task.end
-                    if start in agv.route:
-                        agv.route=agv.route[0:agv.routeid]+get_path(self.map,agv.location,start)+get_path(self.map,start,end)[1:]
-                    else:
-                        agv.route=agv.route[0:agv.routeid]+get_path(self.map,agv.location,end)
-                    print(f"AGV:{agv.ID} path have re-plan {agv.route}")
-                continue
-            else:
-                if agv.waiting_time_work!=0:
-                    print(Fore.RED+f"AGV:{agv.ID} have wait {agv.waiting_time_work}s"+Fore.BLACK)
+            #判断下一个目的地是否被别的agv预定，若被预定着等待一定时间啊，若发生死锁则重新规划路径，否者就前进
+            if  ((self.map[agv.next_loc].reservation==True and self.map[agv.next_loc].reserve_agv!=agv.ID)
+                    or self.judje_cross_agv(agv)):
+                try:
+                    agv.waiting_time_work+=self.step
+                    if agv.waiting_time_work>Agv_Length*2/agv.speed:
+                        assert isinstance(agv.task,Task),"agv.task is not an instance of Task"
+                        start=agv.task.start
+                        end=agv.task.end
+                        if not self.map[end].reservation and not self.map[self.map[end].neighbor[0]].reservation:
+                            if start in agv.route[agv.routeid+1:]:
+                                if not self.map[start].reservation and not self.map[self.map[start].neighbor[0]].reservation:
+                                    agv.route=agv.route[0:agv.routeid]+get_path(self.map,agv.location,start)+get_path(self.map,start,end)[1:]
+                                else:
+                                    agv.waiting_time_work=0
+                            else:
+                                agv.route=agv.route[0:agv.routeid]+get_path(self.map,agv.location,end)
+                            agv.next_loc=agv.route[agv.routeid+1]
+                            self.map[agv.next_loc].reservation=True
+                            self.map[agv.next_loc].reserve_agv=agv.ID
+                            print(Fore.GREEN+f"AGV:{agv.ID} have re-plan route {agv.route} \n"+Fore.BLACK)
+                            agv.waiting_time_work=0
+                        else:
+                            print(Fore.RED+f"AGV:{agv.ID} because of end reserved have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
+                            agv.waiting_time_work=0
+
+                except TypeError as ty:
+                    print(Fore.RED+f"{TypeError}"+Fore.BLACK)
                     agv.waiting_time_work=0
 
 
-            agv.x+=agv.speed*self.step*calculate_cosine(vector[0],vector[1])
-            agv.y+=agv.speed*self.step*calculate_sine(vector[0],vector[1])
+
+
+
+
+                #continue
+            else:
+                #开始前进
+                agv.x+=agv.speed*self.step*calculate_cosine(vector[0],vector[1])
+                agv.y+=agv.speed*self.step*calculate_sine(vector[0],vector[1])
+                if agv.waiting_time_work!=0:
+                    print(Fore.RED+f"AGV:{agv.ID} have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
+                    agv.waiting_time_work=0
+
+            #判断是否到达下一个点
             if math.sqrt((self.map[agv.next_loc].x-agv.x)**2+(self.map[agv.next_loc].y-agv.y)**2)<self.error:
                 if agv.routeid+1!=len(agv.route)-1: #判断是否到达终点
                     agv.x=self.map[agv.next_loc].x
@@ -223,22 +288,39 @@ class simulate:
                     agv.routeid=agv.routeid+1
                     agv.location=agv.next_loc
                     agv.next_loc=agv.route[agv.routeid+1]
-
-                    self.map[agv.location].reservation=True
-                    self.map[agv.next_loc].reservation=True
-                    self.map[agv.location].reserve_agv=agv.ID
-                    self.map[agv.next_loc].reserve_agv=agv.ID
-
                     self.map[agv.last_loc].reservation=False
                     self.map[agv.last_loc].reserve_agv=0  #沒有人預定
-
-
                     print(f"AGV:{agv.ID}")
-                    print(f"next node:{agv.next_loc} x:{self.map[agv.next_loc].x}   y:{self.map[agv.next_loc].y}")
-                    print(f"now node:{agv.location} x:{self.map[agv.location].x}   y:{self.map[agv.location].y}")
+                    print(f"NEXT NODE:{agv.next_loc} x:{self.map[agv.next_loc].x}   y:{self.map[agv.next_loc].y}")
+                    print(f"NOW NODE:{agv.location} x:{self.map[agv.location].x}   y:{self.map[agv.location].y}")
+                    print(f"NOW LOCATION: x:{agv.x}   y:{agv.y}")
+                    print(f"NOW ROTATION: {agv.rotate} {agv.rotate/math.pi}\u03c0 \n")
+                    self.map[agv.location].reservation=True
+                    self.map[agv.location].reserve_agv=agv.ID
+                    if self.map[agv.next_loc].reservation!=True:
+                        self.map[agv.next_loc].reservation=True
+                        self.map[agv.next_loc].reserve_agv=agv.ID
+
+
                 else:
                     agv.status="finish"
-                    print(f"AGV:{agv.ID} have finished")
+                    agv.last_loc= agv.location
+                    agv.location=agv.next_loc
+                    self.map[agv.last_loc].reservation=False
+                    self.map[agv.last_loc].reserve_agv=0
+                    print(f"AGV:{agv.ID} have finished \n")
+
+
+
+
+
+
+
+
+
+
+
+
 
     def run(self):
         while not self.is_finished:
@@ -257,7 +339,7 @@ class simulate:
 
             self.is_finished=tempbool
 
-        print("Simulate Finished")
+        print("Simulate Finished \n")
         gengrate_video()
 
 
@@ -276,7 +358,7 @@ if __name__=="__main__":
     task2=Task(1,1,1,8,13,1,1)
     task3=Task(1,1,1,10,14,1,1)
     task4=Task(1,1,1,12,17,1,1)
-    task5=Task(1,1,1,14,6,1,1)
+    task5=Task(1,1,1,14,16,1,1)
 
     tasks[1]=task1
     tasks[2]=task2
