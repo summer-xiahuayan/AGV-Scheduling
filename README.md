@@ -29,3 +29,10 @@ You can choose between Manhattan distance or Euclidean distance.
 **16-adjacency path planning**
 
 ![image-20240913171501335](https://gitee.com/xiahuayan/public-image-lab/raw/master/img/202409131715537.png)
+
+![output_gif_2agv](E:\PYCHARM\pycharm project\AGV-Scheduling\output_gif_2agv.gif)
+
+
+
+
+

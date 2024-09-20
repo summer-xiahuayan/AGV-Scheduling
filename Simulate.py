@@ -414,16 +414,16 @@ if __name__=="__main__":
     SM=simulate(dictionary_map)
     tasks={}
 
-    task1=Task(1,1,1,20,15,1,1)
-    task2=Task(1,1,1,39,13,1,1)
-    task3=Task(1,1,1,38,14,1,1)
-    task4=Task(1,1,1,35,17,1,1)
-    task5=Task(1,1,1,37,16,1,1)
-    task6=Task(1,1,1,30,11,1,1)
-    task7=Task(1,1,1,27,12,1,1)
-    task8=Task(1,1,1,26,10,1,1)
-    task9=Task(1,1,1,25,9,1,1)
-    task10=Task(1,1,1,19,8,1,1)
+    task1=Task(1,1,1,25,9,1,1)
+    task2=Task(1,1,1,39,10,1,1)
+    task3=Task(1,1,1,38,11,1,1)
+    task4=Task(1,1,1,35,12,1,1)
+    task5=Task(1,1,1,37,13,1,1)
+    task6=Task(1,1,1,30,16,1,1)
+    task7=Task(1,1,1,41,15,1,1)
+    task8=Task(1,1,1,26,177,1,1)
+    task9=Task(1,1,1,25,179,1,1)
+    task10=Task(1,1,1,27,181,1,1)
 
     tasks[1]=task1
     tasks[2]=task2
