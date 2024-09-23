@@ -11,7 +11,7 @@ import os
 import math
 from tqdm import tqdm
 from colorama import Fore
-
+from logger import logger
 
 
 
@@ -87,8 +87,8 @@ def gengrate_video():
             image = imageio.imread(image_file)
             video.append_data(image)
             #print(image_file)
+    logger.info("Video have finished")
 
-    print("Video have finished")
 
 
 
@@ -175,7 +175,8 @@ class simulate:
             agv.route=get_path(self.map,agv.park_loc,task[i].start)+get_path(self.map,task[i].start,task[i].end)[1:]
             agv.status="busy"
             agv.task=task[i]
-            print(agv.route)
+            #print(agv.route)
+            logger.info(f"AGV:{agv.ID},ROUTE:{agv.route}")
             agv.location=agv.route[0]
             agv.next_loc=agv.route[1]
             #self.map[agv.location].reservation=True
@@ -219,7 +220,8 @@ class simulate:
                     agv.next_loc=agv.route[agv.routeid+1]
                     self.map[agv.next_loc].reservation=True
                     self.map[agv.next_loc].reserve_agv=agv.ID
-                    print(Fore.GREEN+f"AGV:{agv.ID} have re-plan route {agv.route} \n"+Fore.BLACK)
+                    logger.warning(f"AGV:{agv.ID} have re-plan route {agv.route} \n")
+                    # print(Fore.GREEN+f"AGV:{agv.ID} have re-plan route {agv.route} \n"+Fore.BLACK)
                     agv.waiting_time_work=0
                 else:
                     agv.waiting_time_work=0
@@ -229,10 +231,12 @@ class simulate:
                 agv.next_loc=agv.route[agv.routeid+1]
                 self.map[agv.next_loc].reservation=True
                 self.map[agv.next_loc].reserve_agv=agv.ID
-                print(Fore.GREEN+f"AGV:{agv.ID} have re-plan route {agv.route} \n"+Fore.BLACK)
+                logger.warning(f"AGV:{agv.ID} have re-plan route {agv.route} \n")
+                # print(Fore.GREEN+f"AGV:{agv.ID} have re-plan route {agv.route} \n"+Fore.BLACK)
                 agv.waiting_time_work=0
         else:
-            print(Fore.RED+f"AGV:{agv.ID} because of end reserved have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
+            logger.warning(f"AGV:{agv.ID} because of end reserved have wait {agv.waiting_time_work}s \n")
+            # print(Fore.RED+f"AGV:{agv.ID} because of end reserved have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
             agv.waiting_time_work=0
 
 
@@ -259,7 +263,8 @@ class simulate:
                             current_agv.next_loc=current_agv.route[current_agv.routeid+1]
                             self.map[current_agv.next_loc].reservation=True
                             self.map[current_agv.next_loc].reserve_agv=current_agv.ID
-                            print(Fore.GREEN+f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n"+Fore.BLACK)
+                            logger.warning(f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n")
+                            # print(Fore.GREEN+f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n"+Fore.BLACK)
                         else:
                             pass
                     else:
@@ -267,11 +272,13 @@ class simulate:
                         current_agv.next_loc=current_agv.route[current_agv.routeid+1]
                         self.map[current_agv.next_loc].reservation=True
                         self.map[current_agv.next_loc].reserve_agv=current_agv.ID
-                        print(Fore.GREEN+f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n"+Fore.BLACK)
+                        logger.warning(f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n")
+                        # print(Fore.GREEN+f"AGV:{current_agv.ID} have global_planning route {current_agv.route} \n"+Fore.BLACK)
                 else:
                     pass
         except TypeError as ty:
-            print(Fore.RED+f"{TypeError}"+Fore.BLACK)
+            logger.error(f"{TypeError}")
+            # print(Fore.RED+f"{TypeError}"+Fore.BLACK)
 
 
 
@@ -327,10 +334,12 @@ class simulate:
                             self.re_plan_path(agv)
 
                         else:
-                            print(Fore.RED+f"AGV:{agv.ID} because of random plan have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
+                            logger.warning(f"AGV:{agv.ID} because of random plan have wait {agv.waiting_time_work}s \n")
+                            # print(Fore.RED+f"AGV:{agv.ID} because of random plan have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
                             agv.waiting_time_work=0
                 except TypeError as ty:
-                    print(Fore.RED+f"{TypeError}"+Fore.BLACK)
+                    logger.error(f"{TypeError}")
+                    # print(Fore.RED+f"{TypeError}"+Fore.BLACK)
                     agv.waiting_time_work=0
                 #continue
             else:
@@ -338,7 +347,8 @@ class simulate:
                 agv.x+=agv.speed*self.step*calculate_cosine(vector[0],vector[1])
                 agv.y+=agv.speed*self.step*calculate_sine(vector[0],vector[1])
                 if agv.waiting_time_work!=0:
-                    print(Fore.RED+f"AGV:{agv.ID} have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
+                    logger.info(f"AGV:{agv.ID} have wait {agv.waiting_time_work}s \n")
+                    #print(Fore.RED+f"AGV:{agv.ID} have wait {agv.waiting_time_work}s \n"+Fore.BLACK)
                     agv.waiting_time_work=0
 
             #判断是否到达下一个点
@@ -352,12 +362,12 @@ class simulate:
                     agv.next_loc=agv.route[agv.routeid+1]
                     self.map[agv.last_loc].reservation=False
                     self.map[agv.last_loc].reserve_agv=0  #沒有人預定
-                    print(f"AGV:{agv.ID}")
-                    print(f"NEXT NODE:{agv.next_loc} x:{self.map[agv.next_loc].x}   y:{self.map[agv.next_loc].y}")
-                    print(f"NOW NODE:{agv.location} x:{self.map[agv.location].x}   y:{self.map[agv.location].y}")
-                    print(f"NOW LOCATION: x:{agv.x}   y:{agv.y}")
-                    print(f"NOW ROTATION: {agv.rotate} {agv.rotate/math.pi}\u03c0 ")
-                    print(f"REMAIN ROAD: "+"——>".join(str(point) for point in agv.route[agv.routeid:])+"\n")
+                    logger.info(f"AGV:{agv.ID}")
+                    logger.info(f"NEXT NODE:{agv.next_loc} x:{self.map[agv.next_loc].x}   y:{self.map[agv.next_loc].y}")
+                    logger.info(f"NOW NODE:{agv.location} x:{self.map[agv.location].x}   y:{self.map[agv.location].y}")
+                    logger.info(f"NOW LOCATION: x:{agv.x}   y:{agv.y}")
+                    logger.info(f"NOW ROTATION: {agv.rotate} {agv.rotate/math.pi}\u03c0 ")
+                    logger.info(f"REMAIN ROAD: "+"——>".join(str(point) for point in agv.route[agv.routeid:])+"\n")
                     self.map[agv.location].reservation=True
                     self.map[agv.location].reserve_agv=agv.ID
                     if self.map[agv.next_loc].reservation!=True:
@@ -369,7 +379,7 @@ class simulate:
                     agv.location=agv.next_loc
                     self.map[agv.last_loc].reservation=False
                     self.map[agv.last_loc].reserve_agv=0
-                    print(f"AGV:{agv.ID} have finished \n")
+                    logger.info(f"AGV:{agv.ID} have finished \n")
 
 
 
@@ -390,7 +400,7 @@ class simulate:
             self.update_agvs()
 
             #if (self.time//self.step)%2==0:
-            self.plot()
+            #self.plot()
            # print(f"simulate time: {self.time}")
 
             tempbool=True
@@ -400,8 +410,8 @@ class simulate:
 
             self.is_finished=tempbool
 
-        print(f"Simulate Finished! Time:{self.time}\n")
-        gengrate_video()
+        logger.info(f"Simulate Finished! Time:{self.time}\n")
+        #gengrate_video()
 
 
 
@@ -412,7 +422,7 @@ class simulate:
 
 
 if __name__=="__main__":
-<<<<<<< HEAD
+
     SM=simulate(dictionary_map)
     tasks={}
 
@@ -441,7 +451,7 @@ if __name__=="__main__":
     SM.creatAGVS(10,tasks)
     SM.run()
     #gengrate_video()
-=======
+
     # SM=simulate(dictionary_map)
     # tasks={}
     #
@@ -469,8 +479,7 @@ if __name__=="__main__":
     #
     # SM.creatAGVS(10,tasks)
     # SM.run()
-    gengrate_video()
->>>>>>> 8e6c2683d611920a1fc718eb2d0bfce5b3051ae1
+   # gengrate_video()
    # create_gif()
     #print(sigmoid_probability(15,1,15))
 
