@@ -30,14 +30,14 @@ def calculate_sine(x, y):
     return y / r if r != 0 else float('inf')  # 避免除以0
 
 class AGV:
-    def __init__(self, num, simul_loc, park_grid, task_list):
+    def __init__(self, num, park_grid,map):
         self.ID = num
         self.status = 'idle'  # idle, busy, put,down, block
         self.task = None  # 实时任务编号task_list[0]
         self.tasklist = []  # 已规划任务清单
         self.route = []  # 从 任务库 中导出对应任务编号的任务路径序列，并将其赋予叉车route_list[self.task]
         self.routeid=0
-        self.location = simul_loc  # 位置节点编号self.route[2]
+        self.location = park_grid  # 位置节点编号self.route[2]
         self.last_loc = None  # 序列中上一目标位置编号self.route[0]
         self.next_loc = None  # 序列中下一目标位置编号self.route[2]
         self.park_loc = park_grid
@@ -47,7 +47,6 @@ class AGV:
         self.y=0
         self.rotatespeed=2*math.pi/8
         self.rotate=0
-        self.map=None
         self.waiting_time_work=0
 
 
@@ -61,69 +60,81 @@ class AGV:
         else:
             logger.warning(f"AGV{self.ID} do not have tasks")
 
-    def set_route_from_task(self):
-        assert isinstance(self.map,dict),"agv.task is not an instance of Task"
+    def set_route_from_task(self,map):
+        assert isinstance(map,dict),"agv.task is not an instance of Task"
         start=self.task.start
         end=self.task.end
+        self.x=map[self.park_loc].x
+        self.y=map[self.park_loc].y
         self.routeid=0
         self.route=[]
-        if not self.map[end].reservation and not self.map[self.map[end].neighbor[0]].reservation:
+        if not map[end].reservation and not map[map[end].neighbor[0]].reservation:
             if start!=self.location:
-                if not self.map[start].reservation and not self.map[self.map[start].neighbor[0]].reservation:
-                    self.route= Map.get_path(self.map, self.location, start) + Map.get_path(self.map, start, end)[1:]
+                if not map[start].reservation and not map[map[start].neighbor[0]].reservation:
+                    self.route= Map.get_path(map, self.location, start) + Map.get_path(map, start, end)[1:]
+                    self.location=self.route[self.routeid]
+                    self.last_loc = self.route[self.routeid]
                     self.next_loc=self.route[self.routeid+1]
-                    self.map[self.next_loc].reservation=True
-                    self.map[self.next_loc].reserve_agv=self.ID
+                    map[self.next_loc].reservation=True
+                    map[self.next_loc].reserve_agv=self.ID
                     logger.info(f"AGV:{self.ID} have get route {self.route} \n")
+                    return True
                 else:
-                    logger.warning(f"AGV:{self.ID} start node {start} was reserved \n")
+                    logger.warning(f"AGV:{self.ID} start node {start} was reserved,reserved people:{map[start].reserve_agv}\n")
+                    logger.warning(f"AGV:{self.ID} start neighbor node {map[start].neighbor[0]} "
+                                   f"was reserved,reserved people:{map[map[start].neighbor[0]].reserve_agv}\n")
+                    return False
             else:
-                self.route=Map.get_path(self.map, start, end)
+                self.route=Map.get_path(map, start, end)
+                self.location=self.route[self.routeid]
+                self.last_loc = self.route[self.routeid]
                 self.next_loc=self.route[self.routeid+1]
-                self.map[self.next_loc].reservation=True
-                self.map[self.next_loc].reserve_agv=self.ID
+                map[self.next_loc].reservation=True
+                map[self.next_loc].reserve_agv=self.ID
                 logger.info(f"AGV:{self.ID} have get route {self.route} \n")
+                return True
         else:
             logger.warning(f"AGV:{self.ID} end node {end} was reserved \n")
+            return False
 
 
     def set_route_to_task_start(self):
-        assert isinstance(self.map,dict),"agv.task is not an instance of Task"
+        assert isinstance(map,dict),"agv.task is not an instance of Task"
         start=self.task.start
         if start!=self.location:
-            if not self.map[start].reservation and not self.map[self.map[start].neighbor[0]].reservation:
-                self.route= self.route[0:self.routeid] + Map.get_path(self.map, self.location, start)
+            if not map[start].reservation and not map[map[start].neighbor[0]].reservation:
+                self.route= self.route[0:self.routeid] + Map.get_path(map, self.location, start)
                 self.next_loc=self.route[self.routeid+1]
-                self.map[self.next_loc].reservation=True
-                self.map[self.next_loc].reserve_agv=self.ID
+                map[self.next_loc].reservation=True
+                map[self.next_loc].reserve_agv=self.ID
                 logger.info(f"AGV:{self.ID} have get route to task start:{self.route} \n")
             else:
                 logger.warning(f"AGV:{self.ID} start node {start} was reserved \n")
         else:
-            self.route=self.route[0:self.routeid] + Map.get_path(self.map, self.location, start)
+            self.route=self.route[0:self.routeid] + Map.get_path(map, self.location, start)
             self.next_loc=self.route[self.routeid+1]
-            self.map[self.next_loc].reservation=True
-            self.map[self.next_loc].reserve_agv=self.ID
+            map[self.next_loc].reservation=True
+            map[self.next_loc].reserve_agv=self.ID
             logger.info(f"AGV:{self.ID} have get to task start:{self.route} \n")
 
 
     def set_route_to_task_end(self):
-        assert isinstance(self.map,dict),"agv.task is not an instance of Task"
+        assert isinstance(map,dict),"agv.task is not an instance of Task"
         end=self.task.end
         if end!=self.location:
-            if not self.map[end].reservation and not self.map[self.map[end].neighbor[0]].reservation:
-                self.route= self.route[0:self.routeid] + Map.get_path(self.map, self.location, end)
+            if not map[end].reservation and not map[map[end].neighbor[0]].reservation:
+                self.route= self.route[0:self.routeid] + Map.get_path(map, self.location, end)
                 self.next_loc=self.route[self.routeid+1]
-                self.map[self.next_loc].reservation=True
-                self.map[self.next_loc].reserve_agv=self.ID
+                map[self.next_loc].reservation=True
+                map[self.next_loc].reserve_agv=self.ID
                 logger.info(f"AGV:{self.ID} have get route to task end:{self.route} \n")
             else:
                 logger.warning(f"AGV:{self.ID} end node {end} was reserved \n")
         else:
-            self.route=self.route[0:self.routeid] + Map.get_path(self.map, self.location, end)
+            self.route=self.route[0:self.routeid] + Map.get_path(map, self.location, end)
             self.next_loc=self.route[self.routeid+1]
-            self.map[self.next_loc].reservation=True
-            self.map[self.next_loc].reserve_agv=self.ID
+            map[self.next_loc].reservation=True
+            map[self.next_loc].reserve_agv=self.ID
             logger.info(f"AGV:{self.ID} have get to task end:{self.route} \n")
 
     def rotate_step(self,step,rotate_direct):
