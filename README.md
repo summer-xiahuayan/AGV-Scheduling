@@ -38,9 +38,7 @@ You can choose between Manhattan distance or Euclidean distance.
 
 #### 3.Simulate
 
-![output_gif_2agv](https://gitee.com/xiahuayan/public-image-lab/raw/master/img/202409201228034.gif)
-
-<video src=".\output_video_10agv.mp4"></video>
+<video src="./output/output_video_10agv.mp4"></video>
 
 
 

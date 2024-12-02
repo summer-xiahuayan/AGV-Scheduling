@@ -1,10 +1,10 @@
 import copy
 import random
-
+import matplotlib.patches as patches
 from matplotlib import pyplot as plt
-
-from MapGenerator import Agv_Length
-from Map import dictionary_map, get_path, plot_route_map, NodeVector, Grid
+from matplotlib import cm,animation
+from MapGenerator import Agv_Length, Agv_Width
+from Map import dictionary_map, get_path, plot_route_map, NodeVector, Grid, plot_map, COLOR
 from AGV import AGV,Task
 import imageio
 import os
@@ -28,7 +28,7 @@ def create_gif(fps=24):
     folder_path = f'imagedata'
 
     # 指定输出视频的路径和文件名
-    gif_path = 'output_gif_2agv.gif'
+    gif_path = 'output/output_gif_2agv.gif'
 
     # 获取文件夹中所有图片文件的路径
     image_files = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(('.png', '.jpg', '.jpeg'))]
@@ -62,7 +62,7 @@ def gengrate_video():
     folder_path = f'imagedata'
 
     # 指定输出视频的路径和文件名
-    video_path = 'output_video_10agv.mp4'
+    video_path = 'output/output_video_10agv.mp4'
 
     # 获取文件夹中所有图片文件的路径
     image_files = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(('.png', '.jpg', '.jpeg'))]
@@ -187,7 +187,7 @@ class simulate:
             self.agvs[i]=temp
 
     def plot(self):
-        ax=plot_route_map(self.agvs)
+        ai=plot_route_map(self.agvs)
         self.frame+=1
         plt.savefig(f'imagedata\\temp_frame_{self.frame}.png')
 
@@ -382,6 +382,113 @@ class simulate:
                     logger.info(f"AGV:{agv.ID} have finished \n")
 
 
+    def init_plot(self):
+
+        line_x=[]
+        line_y=[]
+        polygon_points=[]
+        polygon_head_point=[]
+        agvs=self.agvs
+        for Key,agv in agvs.items():
+            assert isinstance(agv,AGV),"obj is not an instance of AGV"
+            crossx=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.cos(agv.rotate+math.atan(Agv_Width/Agv_Length))
+            crossy=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.sin(agv.rotate+math.atan(Agv_Width/Agv_Length))
+            crossx_=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.cos(agv.rotate-math.atan(Agv_Width/Agv_Length))
+            crossy_=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.sin(agv.rotate-math.atan(Agv_Width/Agv_Length))
+            forward_left=(crossx+agv.x,crossy+agv.y)
+            backword_right=(agv.x-crossx,agv.y-crossy)
+            forward_right=(crossx_+agv.x,crossy_+agv.y)
+            backword_left=(agv.x-crossx_,agv.y-crossy_)
+
+            head_backword_right=(forward_right[0]+(backword_right[0]-forward_right[0])*0.3,forward_right[1]+(backword_right[1]-forward_right[1])*0.3)
+            head_backword_left=(forward_left[0]+(backword_left[0]-forward_left[0])*0.3,forward_left[1]+(backword_left[1]-forward_left[1])*0.3)
+
+
+
+            x = [agv.x, dictionary_map[agv.next_loc].x]
+            y = [agv.y, dictionary_map[agv.next_loc].y]
+            # 使用plot函数画线
+            #ax.plot(x, y, COLOR[Key],linewidth=3)
+            line_x.append(x)
+            line_y.append(y)
+            task_1_get=agv.route[agv.routeid+1:]
+            i=1
+            for point in task_1_get:
+
+                if i==len(task_1_get):
+                    break
+                #print(point)
+                #print(task_1_get[i])
+                x = [dictionary_map[point].x, dictionary_map[task_1_get[i]].x]
+                y = [dictionary_map[point].y, dictionary_map[task_1_get[i]].y]
+                # 使用plot函数画线
+                #ax.plot(x, y, COLOR[Key],linewidth=3)  # '-r' 表示红色的实线
+                line_x.append(x)
+                line_y.append(y)
+                i+=1
+            # 定义矩形四个角的坐标
+            # 假设这四个点分别是矩形的左上角、右上角、右下角、左下角
+            points = [forward_left, forward_right,backword_right ,backword_left]
+            head_point=[forward_left,forward_right,head_backword_right,head_backword_left]
+            polygon_points.append(points)
+            polygon_head_point.append(head_point)
+        return line_x,line_y,polygon_points,polygon_head_point
+
+    def update_plot(self,frame):
+        #global ax
+        ax.cla()
+        agvs=self.agvs
+        for Key,agv in agvs.items():
+            assert isinstance(agv,AGV),"obj is not an instance of AGV"
+            crossx=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.cos(agv.rotate+math.atan(Agv_Width/Agv_Length))
+            crossy=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.sin(agv.rotate+math.atan(Agv_Width/Agv_Length))
+            crossx_=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.cos(agv.rotate-math.atan(Agv_Width/Agv_Length))
+            crossy_=math.sqrt((Agv_Length/2)**2+(Agv_Width/2)**2)*math.sin(agv.rotate-math.atan(Agv_Width/Agv_Length))
+            forward_left=(crossx+agv.x,crossy+agv.y)
+            backword_right=(agv.x-crossx,agv.y-crossy)
+            forward_right=(crossx_+agv.x,crossy_+agv.y)
+            backword_left=(agv.x-crossx_,agv.y-crossy_)
+
+            head_backword_right=(forward_right[0]+(backword_right[0]-forward_right[0])*0.3,forward_right[1]+(backword_right[1]-forward_right[1])*0.3)
+            head_backword_left=(forward_left[0]+(backword_left[0]-forward_left[0])*0.3,forward_left[1]+(backword_left[1]-forward_left[1])*0.3)
+
+
+
+            x = [agv.x, dictionary_map[agv.next_loc].x]
+            y = [agv.y, dictionary_map[agv.next_loc].y]
+            # 使用plot函数画线
+            ax.plot(x, y, COLOR[Key],linewidth=3)
+
+            task_1_get=agv.route[agv.routeid+1:]
+            i=1
+            for point in task_1_get:
+
+                if i==len(task_1_get):
+                    break
+                #print(point)
+                #print(task_1_get[i])
+                x = [dictionary_map[point].x, dictionary_map[task_1_get[i]].x]
+                y = [dictionary_map[point].y, dictionary_map[task_1_get[i]].y]
+                # 使用plot函数画线
+                ax.plot(x, y, COLOR[Key],linewidth=3)  # '-r' 表示红色的实线
+
+                i+=1
+            # 定义矩形四个角的坐标
+            # 假设这四个点分别是矩形的左上角、右上角、右下角、左下角
+            points = [forward_left, forward_right,backword_right ,backword_left]
+            head_point=[forward_left,forward_right,head_backword_right,head_backword_left]
+            # print(points)
+            # print(head_point)
+            #创建一个多边形
+            polygon = patches.Polygon(points, closed=True, edgecolor="black", facecolor=COLOR[Key])
+            #将多边形添加到坐标轴
+            ax.add_patch(polygon)
+
+            # 创建一个多边形
+            polygon = patches.Polygon(head_point, closed=True, edgecolor="black", facecolor=COLOR[0])
+            # 将多边形添加到坐标轴
+            ax.add_patch(polygon)
+
 
 
 
@@ -394,10 +501,24 @@ class simulate:
 
 
     def run(self):
+        global ax
+        fig,ax=plot_map(dictionary_map,0,0)
+        # # 设置y轴的范围
+        ax.set_ylim(-24, -8)
+        # # 设置y轴的范围
+        ax.set_xlim(15, 65)
+
+
+
+
+
+
         while not self.is_finished:
             self.time+=self.step
 
             self.update_agvs()
+            ani=animation.FuncAnimation(fig, self.update_plot,interval=10, fargs=())
+            ani.save("output.gif")
 
             #if (self.time//self.step)%2==0:
             #self.plot()

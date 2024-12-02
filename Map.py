@@ -213,7 +213,7 @@ def plot_map(dictionary_map,start,end):
     #plt.show()
     #plt.savefig(f'map.png')
 
-    return ax
+    return fig,ax
 
 
 
@@ -221,7 +221,7 @@ def plot_map(dictionary_map,start,end):
 def plot_route_map(agvs):
     # 创建一个图形和坐标轴
     #fig,ax= plt.subplots()
-    ax=plot_map(dictionary_map,0,0)
+    fig,ax=plot_map(dictionary_map,0,0)
 
     for Key,agv in agvs.items():
         assert isinstance(agv,AGV),"obj is not an instance of AGV"
