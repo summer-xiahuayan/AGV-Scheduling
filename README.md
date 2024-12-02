@@ -32,7 +32,13 @@ You can choose between Manhattan distance or Euclidean distance.
 
 #### 3.Simulate
 
-<video src="./output/output_video_10agv.mp4"></video>
+<video controls>
+  <source src="./output/output_video_10agv.mp4" type="video/mp4">
+</video>
+
+
+
+
 
 
 
